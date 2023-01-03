@@ -127,7 +127,7 @@ def get_all_points_on_line(points, p1, p2, width):
     clusters = points_to_clusters(on_line, 40)
     for cluster in clusters:
         if p1 in cluster or p2 in cluster:
-            return cluster
+            return list(set(cluster))
 
     raise np.TooHardError("too hard :(")
 
