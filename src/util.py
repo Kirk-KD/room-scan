@@ -124,12 +124,12 @@ def get_all_points_on_line(points, p1, p2, width):
             if dist_to_line <= width:
                 on_line.append((x, y))
     
-    clusters = points_to_clusters(on_line, 40)
+    clusters = points_to_clusters(on_line, 30)
     for cluster in clusters:
         if p1 in cluster or p2 in cluster:
             return list(set(cluster))
 
-    raise np.TooHardError("too hard :(")
+    raise Exception("Somehow p1 or p2 was deleted?")
 
 
 def points_to_clusters(points, max_distance):
@@ -148,9 +148,12 @@ def points_to_clusters(points, max_distance):
     return cluster_list
 
 
-def lines_to_points(lines):
-    points = set()
-    for line in lines:
-        points.add(line.start)
-        points.add(line.end)
-    return list(points)
+def find_point_on_circumference(center, radius, pass_through):
+    """Find a point on the circumference that, when a line is drawn from `center` to the point, it passes through `pass_through`."""
+
+    angle = math.atan2(pass_through[1] - center[1], pass_through[0] - center[0])
+
+    x = center[0] + radius * math.cos(angle)
+    y = center[1] + radius * math.sin(angle)
+
+    return x, y

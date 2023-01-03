@@ -19,7 +19,7 @@ class Simulation:
         self.main_surf = pygame.display.set_mode(self.WINDOW_SIZE)
         self.room_surf = pygame.image.load(f"rooms/{room_number}.png")
 
-        self.robot = Robot(self.main_surf, self.ROBOT_RADIUS, (350, 350), self.SCANS_PER_DEGREE, self.LASER_RANGE)
+        self.robot = Robot(self.main_surf, self.ROBOT_RADIUS, (150, 150), self.SCANS_PER_DEGREE, self.LASER_RANGE)
     
     def main(self):
         if self.robot.check_target():

@@ -1,6 +1,6 @@
 import pygame
 
-from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points
+from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points, find_point_on_circumference, mid_point
 from colors import *
 
 
@@ -13,8 +13,6 @@ class Line:
 
     def draw(self, surf: pygame.Surface):
         pygame.draw.line(surf, GREEN, self.start, self.end, 2)
-        pygame.draw.circle(surf, BLUE, self.start, 3)
-        pygame.draw.circle(surf, BLUE, self.end, 3)
     
     def __str__(self):
         return f"<Line from {self.start} to {self.end}>"
