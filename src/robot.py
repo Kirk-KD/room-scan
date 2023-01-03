@@ -22,7 +22,7 @@ class Robot:
             
             self.laser.rotate(0.25)
         
-        self.points.parse_lines()
+        self.points.make_lines()
 
     def draw(self):
         for point in self.points.points:

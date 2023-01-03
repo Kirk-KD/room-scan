@@ -37,7 +37,7 @@ class PointsManager:
         if len(self.points) == 0 or closest_distance(point, self.points, include_self=True) >= self.min_dist:
             self.points.append(point)
     
-    def parse_lines(self):
+    def make_lines(self):
         points = self.points.copy()
         checked_points = set()
 
