@@ -28,11 +28,11 @@ class PointsManager:
         self.points = []
         self.lines = []
 
-    def count(self):
+    def count_points(self):
         return len(self.points)
     
     def add_point(self, point: tuple[int, int]):
-        if len(self.points) == 0 or closest_distance(point, self.points, include_self=True) >= self.min_dist:
+        if self.count_points() == 0 or closest_distance(point, self.points, include_self=True) >= self.min_dist:
             self.points.append(point)
     
     def make_lines(self):
