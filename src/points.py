@@ -1,6 +1,7 @@
 import pygame
 
 from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points, mid_point, euclidean_distance
+from config import LINE_WIDTH
 from colors import *
 
 
@@ -11,8 +12,14 @@ class Line:
         self.start = start
         self.end = end
 
+        self.slope = (float("inf") if self.start[0] == self.end[0]
+            else (self.start[1] - self.end[1]) / (self.start[0] - self.end[0]))
+
     def draw(self, surf: pygame.Surface):
         pygame.draw.line(surf, GREEN, self.start, self.end, 2)
+
+    def should_connect(self, other):
+        pass
     
     def __str__(self):
         return f"<Line from {self.start} to {self.end}>"
@@ -51,7 +58,7 @@ class PointsManager:
             if point_2 in checked_points:
                 continue
             
-            points_on_line = get_all_points_on_line(points, point_1, point_2, self.min_dist * 1.2)
+            points_on_line = get_all_points_on_line(points, point_1, point_2, LINE_WIDTH)
 
             # the two points farthest away from each other should be the line's end points
             start, end = farthest_two_points(points_on_line)

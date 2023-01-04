@@ -2,6 +2,8 @@ import numpy as np
 import math
 from sklearn.cluster import DBSCAN
 
+from config import LINE_CLUSTER_ESP
+
 
 def euclidean_distance(p1, p2):
     p1x, p1y = p1
@@ -125,7 +127,7 @@ def get_all_points_on_line(points, p1, p2, width):
             if dist_to_line <= width:
                 on_line.append((x, y))
     
-    clusters = points_to_clusters(on_line, 30)
+    clusters = points_to_clusters(on_line, LINE_CLUSTER_ESP)
     for cluster in clusters:
         if p1 in cluster or p2 in cluster:
             return list(set(cluster))
