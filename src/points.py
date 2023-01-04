@@ -1,6 +1,6 @@
 import pygame
 
-from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points, find_point_on_circumference, mid_point
+from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points, mid_point, euclidean_distance
 from colors import *
 
 
@@ -31,55 +31,112 @@ class PointsManager:
     def count(self):
         return len(self.points)
     
-    def add(self, point: tuple[int, int]):
+    def add_point(self, point: tuple[int, int]):
         if len(self.points) == 0 or closest_distance(point, self.points, include_self=True) >= self.min_dist:
             self.points.append(point)
     
     def make_lines(self):
-        points = self.points.copy()
-        checked_points = set()
+        points = self.points.copy()  # make a copy to not affect original points
+        checked_points = set()  # prevent duplicates, set for speed
 
         lines = []
 
+        # check every unchecked point
         for point_1 in points:
             if point_1 in checked_points:
                 continue
         
+            # take the closest point from `point_1` in `points` to construct a line
             point_2 = closest_point(point_1, points)
             if point_2 in checked_points:
                 continue
             
             points_on_line = get_all_points_on_line(points, point_1, point_2, self.min_dist * 1.2)
-            start, end = farthest_two_points(points_on_line)
 
+            # the two points farthest away from each other should be the line's end points
+            start, end = farthest_two_points(points_on_line)
             if start == end:
                 continue
 
+            # remove all points on the line except for the two end points
             [points.remove(p) for p in points_on_line if p in points and p != start and p != end]
 
+            # add new checked points
             checked_points.update(set(points_on_line))
 
+            # create line
             lines.append(Line(start, end))
 
-            for line in lines:
-                if line.start not in points or line.end not in points:
-                    lines.remove(line)
-
         self.lines = lines
-        self.points = points
-
-        return lines
     
-    def get_single_points(self):
-        points = self.lines_to_points(keep_duplicates=True)
-        return set([p for p in points if points.count(p) == 1])
+    def get_opening_targets(self):  # TODO fix having the points in walls
+        groups = self.group_lines_by_connection()
+        end_points = self.get_end_points()
 
-    def lines_to_points(self, keep_duplicates: bool=False):
+        pairs = set()
+        checked = set()
+
+        def is_in_diff_groups(a, b):
+            for group in groups:
+                points = self.lines_to_points(lines=group)
+                if a in points and b in points:
+                    return False
+            return True
+
+        for point in end_points:
+            if point in checked:
+                continue
+
+            others_sorted = sorted(end_points, key=lambda p: euclidean_distance(p, point))[1:]
+            for other in others_sorted:
+                if other in checked:
+                    continue
+
+                if is_in_diff_groups(point, other):
+                    pairs.add((point, other))
+                    checked.add(point)
+                    checked.add(other)
+                    break
+        
+        return [mid_point(p1, p2, is_int=True) for p1, p2 in pairs]
+
+    def get_end_points(self):
+        # convert all lines into points but keep the duplicates.
+        # a point is an end point if it appeared only one time.
+        points = self.lines_to_points(keep_duplicates=True)
+        return list(set([p for p in points if points.count(p) == 1]))
+
+    def lines_to_points(self, lines=None, keep_duplicates: bool=False):
         points = []
-        for line in self.lines:
+        for line in (lines if lines is not None else self.lines):
             points.append(line.start)
             points.append(line.end)
         return (list if keep_duplicates else set)(points)
+    
+    def group_lines_by_connection(self):
+        """Split lines into "islands" by whether or not they are connected."""
+
+        groups = []
+        visited = set()
+
+        def dfs(line, group):
+            visited.add(line)
+            group.append(line)
+            for other in self.lines:
+                if (other.start == line.start or
+                    other.start == line.end or
+                    other.end == line.start or
+                    other.end == line.end):
+                    if other not in visited:
+                        dfs(other, group)
+        
+        for line in self.lines:
+            if line not in visited:
+                group = []
+                dfs(line, group)
+                groups.append(group)
+        
+        return groups
 
     def __str__(self):
         return str(self.points)

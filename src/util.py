@@ -6,7 +6,7 @@ from sklearn.cluster import DBSCAN
 def euclidean_distance(p1, p2):
     p1x, p1y = p1
     p2x, p2y = p2
-    return np.sqrt((p2x - p1x) ** 2 + (p2y - p1y) ** 2)
+    return math.sqrt((p2x - p1x) ** 2 + (p2y - p1y) ** 2)
 
 
 def points_in_radius(points, center, radius):
@@ -20,8 +20,9 @@ def get_dest_by_angle(start, deg, length):
     return int(start[0] + xd), int(start[1] + yd)
 
 
-def mid_point(p1, p2):
-    return (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
+def mid_point(p1, p2, is_int: bool=False):
+    x, y = (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
+    return (int(x), int(y)) if is_int else (x, y)
 
 
 def raycast(surf, collision_color, start, angle, max_dist):
