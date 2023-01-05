@@ -26,6 +26,9 @@ class Simulation:
         points = self.robot.points.get_opening_targets()
         for point in points:
             pygame.draw.circle(self.main_surf, GREEN, point, 3)
+        
+        for point in self.robot.points.lines_to_points():
+            pygame.draw.circle(self.main_surf, BLUE, point, 3)
 
     def pull_events(self):
         for event in pygame.event.get():

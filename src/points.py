@@ -1,7 +1,8 @@
 import pygame
+import math
 
 from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points, mid_point, euclidean_distance
-from config import LINE_WIDTH
+from config import LINE_WIDTH, MAX_LINE_DEGREES_DIFF, MAX_LINE_ENDPOINT_DIFF
 from colors import *
 
 
@@ -13,13 +14,27 @@ class Line:
         self.end = end
 
         self.slope = (float("inf") if self.start[0] == self.end[0]
-            else (self.start[1] - self.end[1]) / (self.start[0] - self.end[0]))
+            else ((self.start[1] - self.end[1]) / (self.start[0] - self.end[0])))
+        self.degrees = math.degrees(math.atan(self.slope)) if self.slope != float("inf") else 90
 
     def draw(self, surf: pygame.Surface):
         pygame.draw.line(surf, GREEN, self.start, self.end, 2)
 
-    def should_connect(self, other):
-        pass
+    def should_merge(self, other):
+        return abs(other.degrees - self.degrees) <= MAX_LINE_DEGREES_DIFF and self.is_close(other)
+    
+    def get_merged(self, other):
+        start, end = farthest_two_points(list(set([self.start, self.end, other.start, other.end])))
+        return Line(start, end)
+    
+    def is_connected(self, other):
+        return set([self.start, self.end]) == set([other.start, other.end])
+    
+    def is_close(self, other):
+        return (euclidean_distance(self.start, other.start) <= MAX_LINE_ENDPOINT_DIFF or
+            euclidean_distance(self.start, other.end) <= MAX_LINE_ENDPOINT_DIFF or
+            euclidean_distance(self.end, other.start) <= MAX_LINE_ENDPOINT_DIFF or
+            euclidean_distance(self.end, other.end) <= MAX_LINE_ENDPOINT_DIFF)
     
     def __str__(self):
         return f"<Line from {self.start} to {self.end}>"
@@ -74,8 +89,29 @@ class PointsManager:
             # create line
             lines.append(Line(start, end))
 
+        for _ in range(3):  # extremely bad, will find real solution later
+            lines = self.merge_lines(lines)
         self.lines = lines
     
+    def merge_lines(self, lines_orig):
+        lines = lines_orig.copy()
+        merged_lines = []
+
+        while lines:
+            line = lines.pop()
+            merged = False
+
+            for i, merged_line in enumerate(merged_lines):
+                if line.should_merge(merged_line):
+                    merged_lines[i] = line.get_merged(merged_line)
+                    merged = True
+                    break
+
+            if not merged:
+                merged_lines.append(line)
+
+        return merged_lines
+
     def get_opening_targets(self):  # TODO fix having the points in walls
         groups = self.group_lines_by_connection()
         end_points = self.get_end_points()
@@ -130,11 +166,7 @@ class PointsManager:
             visited.add(line)
             group.append(line)
             for other in self.lines:
-                if (other.start == line.start or
-                    other.start == line.end or
-                    other.end == line.start or
-                    other.end == line.end):
-                    if other not in visited:
+                if line.is_connected(other) and other not in visited:
                         dfs(other, group)
         
         for line in self.lines:
