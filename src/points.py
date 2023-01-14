@@ -2,7 +2,7 @@ import pygame
 import math
 
 from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points, mid_point, euclidean_distance
-from config import LINE_WIDTH, MAX_LINE_DEGREES_DIFF, MAX_LINE_ENDPOINT_DIFF
+from config import LINE_WIDTH, MAX_LINE_DEGREES_DIFF, MAX_LINE_ENDPOINT_DIFF, ROBOT_RADIUS
 from colors import *
 
 
@@ -92,6 +92,8 @@ class PointsManager:
         for _ in range(3):  # extremely bad, will find real solution later
             lines = self.merge_lines(lines)
         self.lines = lines
+
+        self.merge_end_points()
     
     def merge_lines(self, lines_orig):
         lines = lines_orig.copy()
@@ -111,6 +113,13 @@ class PointsManager:
                 merged_lines.append(line)
 
         return merged_lines
+
+    def merge_end_points(self):
+        ep = self.get_end_points()
+        for i in range(len(ep)):
+            for j in range(i + 1, len(ep)):
+                if euclidean_distance(ep[i], ep[j]) <= ROBOT_RADIUS * 2:
+                    self.lines.append(Line(ep[i], ep[j]))
 
     def get_opening_targets(self):  # TODO fix having the points in walls
         groups = self.group_lines_by_connection()

@@ -5,6 +5,7 @@ from laser import Laser
 from points import PointsManager
 from colors import *
 from util import euclidean_distance
+from config import POINTS_MINIMUM_DISTANCE
 
 
 class Robot:
@@ -17,7 +18,7 @@ class Robot:
         self.movement_speed = movement_speed
 
         self.laser = Laser(self.surface, WHITE, self.position, 0, laser_max_dist)
-        self.points = PointsManager(2)
+        self.points = PointsManager(POINTS_MINIMUM_DISTANCE)
     
     def scan360(self):
         for _ in range(360 * self.scans_per_deg):
