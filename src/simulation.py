@@ -2,7 +2,7 @@ import pygame
 
 from robot import Robot
 from colors import *
-from config import LASER_RANGE, ROBOT_INIT_POSITION, ROBOT_RADIUS, ROBOT_SPEED, SCANS_PER_DEGREE, WINDOW_SIZE, FPS
+from config import LASER_RANGE, ROBOT_INIT_POSITION, ROBOT_INIT_ROTATION, ROBOT_RADIUS, ROBOT_SPEED, SCANS_PER_DEGREE, WINDOW_SIZE, FPS
 
 
 class Simulation:
@@ -13,7 +13,7 @@ class Simulation:
         self.main_surf = pygame.display.set_mode(WINDOW_SIZE)
         self.room_surf = pygame.image.load(f"rooms/{room_number}.png")
 
-        self.robot = Robot(self.main_surf, ROBOT_RADIUS, ROBOT_INIT_POSITION, SCANS_PER_DEGREE, LASER_RANGE, ROBOT_SPEED)
+        self.robot = Robot(self.main_surf, ROBOT_RADIUS, ROBOT_INIT_POSITION, ROBOT_INIT_ROTATION, SCANS_PER_DEGREE, LASER_RANGE, ROBOT_SPEED)
     
     def main(self):
         if self.robot.check_target():
@@ -22,10 +22,6 @@ class Simulation:
             self.robot.move_toward_target()
 
         self.robot.draw()
-
-        points = self.robot.points.get_opening_targets()
-        for point in points:
-            pygame.draw.circle(self.main_surf, GREEN, point, 3)
 
     def pull_events(self):
         for event in pygame.event.get():

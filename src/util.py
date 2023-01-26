@@ -130,7 +130,7 @@ def get_all_points_on_line(points, p1, p2, width):
     clusters = points_to_clusters(on_line, LINE_CLUSTER_ESP)
     for cluster in clusters:
         if p1 in cluster or p2 in cluster:
-            return list(set(cluster))
+            return list(set(cluster + [p1, p2]))
 
     raise Exception("Somehow p1 or p2 was deleted?")
 
@@ -151,12 +151,37 @@ def points_to_clusters(points, max_distance):
     return cluster_list
 
 
-def find_point_on_circumference(center, radius, pass_through):
-    """Find a point on the circumference that, when a line is drawn from `center` to the point, it passes through `pass_through`."""
+def distance_point_to_line(point, line):
+    p_to_s = euclidean_distance(point, line.start)
+    p_to_e = euclidean_distance(point, line.end)
+    md = min(p_to_s, p_to_e)
+    min_dist_to_end_points = md, (line.start if md == p_to_s else line.end)
 
-    angle = math.atan2(pass_through[1] - center[1], pass_through[0] - center[0])
+    if line.slope == float("inf"):
+        if min(line.start[1], line.end[1]) <= point[1] <= max(line.start[1], line.end[1]):
+            return abs(line.start[0] - point[0]), (line.start[0], point[1])
+        else:
+            return min_dist_to_end_points
+    if line.slope == 0:
+        if min(line.start[0], line.end[0]) <= point[0] <= max(line.start[0], line.end[0]):
+            return abs(line.start[1] - point[1]), (point[0], line.start[1])
+        else:
+            return min_dist_to_end_points
+    else:
+        m = -(1 / line.slope)
+        b = -(m * point[0]) + point[1]
 
-    x = center[0] + radius * math.cos(angle)
-    y = center[1] + radius * math.sin(angle)
+        x = (line.y_int - b) / (m - line.slope)
+        y = line.slope * x + line.y_int
 
-    return x, y
+        if (min(line.start[0], line.end[0]) <= x <= max(line.start[0], line.end[0]) and
+            min(line.start[1], line.end[1]) <= y <= max(line.start[1], line.end[1])):
+            return euclidean_distance((x, y), point), (x, y)
+        else:
+            return min_dist_to_end_points
+
+
+def angle_from_two_points(start, end):
+    x_diff = end[0] - start[0]
+    y_diff = end[1] - start[1]
+    return math.degrees(math.atan2(y_diff, x_diff))

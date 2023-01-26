@@ -1,7 +1,7 @@
 import pygame
 import math
 
-from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points, mid_point, euclidean_distance
+from util import closest_distance, closest_point, get_all_points_on_line, farthest_two_points, euclidean_distance, distance_point_to_line
 from config import LINE_WIDTH, MAX_LINE_DEGREES_DIFF, MAX_LINE_ENDPOINT_DIFF, ROBOT_RADIUS
 from colors import *
 
@@ -15,6 +15,7 @@ class Line:
 
         self.slope = (float("inf") if self.start[0] == self.end[0]
             else ((self.start[1] - self.end[1]) / (self.start[0] - self.end[0])))
+        self.y_int = self.start[1] - self.slope * self.start[0] if self.slope != float("inf") else None
         self.degrees = math.degrees(math.atan(self.slope)) if self.slope != float("inf") else 90
 
     def draw(self, surf: pygame.Surface):
@@ -121,37 +122,6 @@ class PointsManager:
                 if euclidean_distance(ep[i], ep[j]) <= ROBOT_RADIUS * 2:
                     self.lines.append(Line(ep[i], ep[j]))
 
-    def get_opening_targets(self):  # TODO fix having the points in walls
-        groups = self.group_lines_by_connection()
-        end_points = self.get_end_points()
-
-        pairs = set()
-        checked = set()
-
-        def is_in_diff_groups(a, b):
-            for group in groups:
-                points = self.lines_to_points(lines=group)
-                if a in points and b in points:
-                    return False
-            return True
-
-        for point in end_points:
-            if point in checked:
-                continue
-
-            others_sorted = sorted(end_points, key=lambda p: euclidean_distance(p, point))[1:]
-            for other in others_sorted:
-                if other in checked:
-                    continue
-
-                if is_in_diff_groups(point, other):
-                    pairs.add((point, other))
-                    checked.add(point)
-                    checked.add(other)
-                    break
-        
-        return [mid_point(p1, p2, is_int=True) for p1, p2 in pairs]
-
     def get_end_points(self):
         # convert all lines into points but keep the duplicates.
         # a point is an end point if it appeared only one time.
@@ -185,6 +155,18 @@ class PointsManager:
                 groups.append(group)
         
         return groups
+    
+    def closest_point_on_lines(self, point):
+        min_dist = float("inf")
+        closest_point = None
+
+        for line in self.lines:
+            d, p = distance_point_to_line(point, line)
+            if d < min_dist:
+                min_dist = d
+                closest_point = p
+        
+        return closest_point
 
     def __str__(self):
         return str(self.points)

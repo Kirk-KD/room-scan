@@ -7,8 +7,9 @@ LASER_RANGE                = 150
 SCANS_PER_DEGREE           = 4
 
 # robot
-ROBOT_SPEED                = 2
+ROBOT_SPEED                = 1
 ROBOT_INIT_POSITION        = 150, 150
+ROBOT_INIT_ROTATION        = 20
 ROBOT_RADIUS               = 10
 
 # points/lines
